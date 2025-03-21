@@ -1,35 +1,31 @@
 
 // Call fetchTodos when the page loads
 window.onload = fetchTodos;
-urgeToWriteTask();
+urgeToWriteTitle();
+
+let check = true;
 
 let globalJsonResponse;
 
 async function addTask() {
-  let eachTask = document.querySelector('.input-element').value;
-  let eachDescription = document.querySelector('.input-element-description').value;
+  let title = document.querySelector('.input-element').value;
+  let description = document.querySelector('.input-element-description').value;
 
   let uniqueId = Date.now();
 
-  if (eachTask === '') return; // Don't add empty tasks
-
-  if (eachTask === '') {
-    alert('Add your task!');
-    urgeToWriteTask();
-    return;
-  } else if (eachDescription === '') {
-    alert('Add your description!');
-    urgeToWriteDes();
+  if (title.trim().length === 0 || description.trim().length === 0) {
+    alert('Add your task title!');
+    urgeToWriteTitle();
     return;
   }
 
   try {
     // First POST the data, and save it in a variable
-    let response = await fetch("https://jsonplaceholder.typicode.com/todos", {
+    const response = await fetch("https://jsonplaceholder.typicode.com/todos", {
       method: "POST",
       body: JSON.stringify({
-        title: eachTask,
-        description: eachDescription,
+        title: title,
+        description: description,
         userId: 1
       }),
       headers: {
@@ -48,7 +44,7 @@ async function addTask() {
     console.error('Error adding task:', error);
   }
 
-  urgeToWriteTask();
+  urgeToWriteTitle();
 }
 
 function saveTodoToLocal(todo) {
@@ -74,6 +70,7 @@ async function fetchTodos() {
 async function displayTask(jsonresponse) {
   try {
     const tasksDiv = document.querySelector('.tasks-div');
+    globalJsonResponse = jsonresponse;
 
   
     const tasksHTML = `
@@ -83,7 +80,7 @@ async function displayTask(jsonresponse) {
           <p class="task-des des-${jsonresponse.id}">${jsonresponse.description}</p>
         </div>
         <div class="buttons-div">
-          <button class="edit-button" style="color: rgb(116, 218, 255);" onclick="editTask(${jsonresponse.id})">Edit</button>
+          <button class="edit-button" style="color: rgb(116, 218, 255);" onclick="editTask()">Edit</button>
           <button class="delete-button" onclick="removeTaskFromBackend(${jsonresponse.id})">Delete</button>
         </div>
       </div>
@@ -137,82 +134,74 @@ async function savingRemovedTask(jsonresponseId) {
 
 // We can not directly pass jsonresponse since this is an object in addTask().
 // onclick can not pass objects. So, we pass the jsonresponse.id.
-function editTask(jsonresponseId) {
+function editTask() {
+  if (check) {
+    urgeToWriteTitle();
 
-  urgeToWriteTask();
+    document.querySelector('.add-button-element').style.display = 'none';
+    document.querySelector('.update-button').style.display = 'inline-block';
 
-  document.querySelector('.add-button-element').style.display = 'none';
-  document.querySelector('.update-button').style.display = 'inline-block';
+    let todos = JSON.parse(localStorage.getItem('todos')) || [];
+    let todo = todos.find(todo => todo.id === globalJsonResponse.id);
 
-  let todos = JSON.parse(localStorage.getItem('todos')) || [];
-  let jsonresponse = todos.find(todo => todo.id === jsonresponseId);
-  globalJsonResponse = jsonresponse;
-
-  if (!jsonresponse) {
-    console.log('Task not found');
-  }
-
-  
-  let textTask = document.querySelector(`.p-${jsonresponseId}`).innerText;
-  let textDes = document.querySelector(`.des-${jsonresponseId}`).innerText;
-
-
-  document.querySelector('.input-element').value = textTask;
-  document.querySelector('.input-element-description').value = textDes;
-}
-
-
-function updateTask() {
-  
-  let editedTask = document.querySelector('.input-element').value;
-  let editedDes = document.querySelector('.input-element-description').value;
-
-  if (editedTask === '') {
-    alert('Have not yet updated!');
-    urgeToWriteTask();
-    return;
-  } else if (editedDes === '') {
-    urgeToWriteDes();
-    alert('Have not yet updated!');
-    return;
-  }
-
-  document.querySelector('.add-button-element').style.display = 'inline-block';
-  document.querySelector('.update-button').style.display = 'none';
-
-  document.querySelector(`.p-${globalJsonResponse.id}`).innerHTML = editedTask;
-  document.querySelector(`.des-${globalJsonResponse.id}`).innerHTML = editedDes;
-
-  let todos = JSON.parse(localStorage.getItem('todos')) || [];
-  
-  todos = todos.map(todo => {
-    if (todo.id === globalJsonResponse.id) {
-      // This return returns the new updated object(with the new values of object properties)
-      return {
-        // ... todo creates a new object.
-        ...todo,
-        title: editedTask,
-        description: editedDes,
-      } 
+    if (!todo) {
+      console.log('Task not found');
+      return;
     }
-    // If the current todo is not the one we want to update, we return it as it is.
-    return todo;
-  });
 
-  localStorage.setItem('todos', JSON.stringify(todos));
+    
+    let textTask = document.querySelector(`.p-${globalJsonResponse.id}`).innerText;
+    let textDes = document.querySelector(`.des-${globalJsonResponse.id}`).innerText;
 
-  urgeToWriteTask();
 
-  document.querySelector('.input-element').value = '';
-  document.querySelector('.input-element-description').value = '';
+    document.querySelector('.input-element').value = textTask;
+    document.querySelector('.input-element-description').value = textDes;
+
+    check = !check;
+  } else {
+    let editedTitle = document.querySelector('.input-element').value;
+    let editedDescription = document.querySelector('.input-element-description').value;
+
+    if (editedTitle.trim().length === 0 || editedDescription.trim().length === 0) {
+      alert('Title or description can not be empty!');
+      urgeToWriteTitle();
+      return;
+    }
+
+    document.querySelector('.add-button-element').style.display = 'inline-block';
+    document.querySelector('.update-button').style.display = 'none';
+
+    document.querySelector(`.p-${globalJsonResponse.id}`).innerHTML = editedTitle;
+    document.querySelector(`.des-${globalJsonResponse.id}`).innerHTML = editedDescription;
+
+    let todos = JSON.parse(localStorage.getItem('todos')) || [];
+    
+    todos = todos.map(todo => {
+      if (todo.id === globalJsonResponse.id) {
+        // This return returns the new updated object(with the new values of object properties)
+        return {
+          // ... todo creates a new object.
+          ...todo,
+          title: editedTitle,
+          description: editedDescription,
+        } 
+      }
+      // If the current todo is not the one we want to update, we return it as it is.
+      return todo;
+    });
+
+    localStorage.setItem('todos', JSON.stringify(todos));
+
+    urgeToWriteTitle();
+
+    document.querySelector('.input-element').value = '';
+    document.querySelector('.input-element-description').value = '';
+
+    check = !check;
+  }
 }
 
-function urgeToWriteTask() {
+function urgeToWriteTitle() {
   document.querySelector('.input-element').focus();
   document.querySelector('.input-element').select();
-}
-
-function urgeToWriteDes() {
-  document.querySelector('.input-element-description').focus();
-  document.querySelector('.input-element-description').select();
 }

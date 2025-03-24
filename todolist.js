@@ -8,13 +8,13 @@ let check = true;
 let globalJsonResponse;
 
 async function addTask() {
-  let title = document.querySelector('.input-element').value;
-  let description = document.querySelector('.input-element-description').value;
+  const title = document.querySelector('.input-element').value;
+  const description = document.querySelector('.input-element-description').value;
 
-  let uniqueId = Date.now();
+  const uniqueId = Date.now();
 
   if (title.trim().length === 0 || description.trim().length === 0) {
-    alert('Add your task title!');
+    alert('Title or description is empty!');
     urgeToWriteTitle();
     return;
   }
@@ -24,8 +24,8 @@ async function addTask() {
     const response = await fetch("https://jsonplaceholder.typicode.com/todos", {
       method: "POST",
       body: JSON.stringify({
-        title: title,
-        description: description,
+        title,
+        description,
         userId: 1
       }),
       headers: {
@@ -33,11 +33,11 @@ async function addTask() {
       },
     }); 
     // Wait for it, and when it is read, take the data and save it
-    let jsonresponse = await response.json();
-    jsonresponse.id = uniqueId;
+    const  data = await response.json();
+    data.id = uniqueId;
 
-    saveTodoToLocal(jsonresponse);
-    displayTask(jsonresponse);
+    saveTodoToLocal(data);
+    displayTask(data);
     document.querySelector('.input-element').value = '';
     document.querySelector('.input-element-description').value = '';
   } catch(error) {
@@ -48,7 +48,7 @@ async function addTask() {
 }
 
 function saveTodoToLocal(todo) {
-  let todos = JSON.parse(localStorage.getItem('todos')) || [];
+  const todos = JSON.parse(localStorage.getItem('todos')) || [];
   todos.push(todo);
   localStorage.setItem('todos', JSON.stringify(todos));
 }
@@ -56,14 +56,13 @@ function saveTodoToLocal(todo) {
 
 async function fetchTodos() {
   try {
-    let todos = JSON.parse(localStorage.getItem('todos')) || [];
+    const todos = JSON.parse(localStorage.getItem('todos')) || [];
 
     todos.forEach(todo => {
       displayTask(todo);
     });
   } catch (error) {
-    console.error("Error parsing todos from localStorage:", error);
-    localStorage.setItem('todos', JSON.stringify([])); // Start fresh with an empty list if corrupted
+    alert("Error parsing todos from localStorage:", error);
   }
 }
 
@@ -73,7 +72,7 @@ async function displayTask(jsonresponse) {
     globalJsonResponse = jsonresponse;
 
   
-    const tasksHTML = `
+    const taskHTML = `
       <div class="each-task task-${jsonresponse.id}">
         <div class="p-div">
           <p class="p-element p-${jsonresponse.id}">${jsonresponse.title}</p>
@@ -81,21 +80,21 @@ async function displayTask(jsonresponse) {
         </div>
         <div class="buttons-div">
           <button class="edit-button" style="color: rgb(116, 218, 255);" onclick="editTask()">Edit</button>
-          <button class="delete-button" onclick="removeTaskFromBackend(${jsonresponse.id})">Delete</button>
+          <button class="delete-button" onclick="removeTask(${jsonresponse.id})">Delete</button>
         </div>
       </div>
     `
 
-    tasksDiv.innerHTML += tasksHTML;
+    tasksDiv.innerHTML += taskHTML;
   } catch (error) {
     console.error('Error with jsonresponse:', error);
   }
 }
 
 
-async function removeTaskFromBackend(jsonresponseId) {
+async function removeTask(jsonresponseId) {
   try {
-    let removed = await fetch(`https://jsonplaceholder.typicode.com/todos/${jsonresponseId}`, {
+    const task = await fetch(`https://jsonplaceholder.typicode.com/todos/${jsonresponseId}`, {
       method: 'DELETE',
       headers: {
         'Content-type': 'application/json',
@@ -103,21 +102,21 @@ async function removeTaskFromBackend(jsonresponseId) {
     });
 
 
-    if (removed.ok) {
-      document.querySelector(`.task-${jsonresponseId}`).remove();
-
-      savingRemovedTask(jsonresponseId);
-    } else {
-      console.log('Error removing the task from API');
+    if (!task.ok) {
+      alert("Couldn't remove your task, please try again later");
+      return;
     }
+    document.querySelector(`.task-${jsonresponseId}`).remove();
+
+    savingRemovedTask(jsonresponseId);
   } catch(error) {
-    console.error('Error deleting the task:', error);
+    alert('Could not delete the task:', error);
   }
 }
 
 async function savingRemovedTask(jsonresponseId) {
   try {
-    let todos = JSON.parse(localStorage.getItem('todos')) || [];
+    const todos = JSON.parse(localStorage.getItem('todos')) || [];
 
     todos = todos.filter(todo => {
       if (todo.id !== jsonresponseId) {
@@ -141,28 +140,28 @@ function editTask() {
     document.querySelector('.add-button-element').style.display = 'none';
     document.querySelector('.update-button').style.display = 'inline-block';
 
-    let todos = JSON.parse(localStorage.getItem('todos')) || [];
-    let todo = todos.find(todo => todo.id === globalJsonResponse.id);
+    const todos = JSON.parse(localStorage.getItem('todos')) || [];
+    const todo = todos.find(todo => todo.id === globalJsonResponse.id);
 
     if (!todo) {
-      console.log('Task not found');
+      alert('Task not found');
       return;
     }
 
     
-    let textTask = document.querySelector(`.p-${globalJsonResponse.id}`).innerText;
-    let textDes = document.querySelector(`.des-${globalJsonResponse.id}`).innerText;
+    const title = document.querySelector(`.p-${globalJsonResponse.id}`).innerText;
+    const description = document.querySelector(`.des-${globalJsonResponse.id}`).innerText;
 
 
-    document.querySelector('.input-element').value = textTask;
-    document.querySelector('.input-element-description').value = textDes;
+    document.querySelector('.input-element').value = title;
+    document.querySelector('.input-element-description').value = description;
 
     check = !check;
   } else {
-    let editedTitle = document.querySelector('.input-element').value;
-    let editedDescription = document.querySelector('.input-element-description').value;
+    const title = document.querySelector('.input-element').value;
+    const description = document.querySelector('.input-element-description').value;
 
-    if (editedTitle.trim().length === 0 || editedDescription.trim().length === 0) {
+    if (title.trim().length === 0 || description.trim().length === 0) {
       alert('Title or description can not be empty!');
       urgeToWriteTitle();
       return;
@@ -171,26 +170,26 @@ function editTask() {
     document.querySelector('.add-button-element').style.display = 'inline-block';
     document.querySelector('.update-button').style.display = 'none';
 
-    document.querySelector(`.p-${globalJsonResponse.id}`).innerHTML = editedTitle;
-    document.querySelector(`.des-${globalJsonResponse.id}`).innerHTML = editedDescription;
+    document.querySelector(`.p-${globalJsonResponse.id}`).innerHTML = title;
+    document.querySelector(`.des-${globalJsonResponse.id}`).innerHTML = description;
 
-    let todos = JSON.parse(localStorage.getItem('todos')) || [];
+    const todos = JSON.parse(localStorage.getItem('todos')) || [];
     
-    todos = todos.map(todo => {
+    newTodos = todos.map(todo => {
       if (todo.id === globalJsonResponse.id) {
         // This return returns the new updated object(with the new values of object properties)
         return {
           // ... todo creates a new object.
           ...todo,
-          title: editedTitle,
-          description: editedDescription,
+          title: title,
+          description: description,
         } 
       }
       // If the current todo is not the one we want to update, we return it as it is.
       return todo;
     });
 
-    localStorage.setItem('todos', JSON.stringify(todos));
+    localStorage.setItem('todos', JSON.stringify(newTodos));
 
     urgeToWriteTitle();
 

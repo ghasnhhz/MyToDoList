@@ -43,8 +43,6 @@ async function addTask() {
   } catch(error) {
     console.error('Error adding task:', error);
   }
-
-  urgeToWriteTitle();
 }
 
 function saveTodoToLocal(todo) {
@@ -55,40 +53,39 @@ function saveTodoToLocal(todo) {
 
 
 async function fetchTodos() {
-  try {
-    const todos = JSON.parse(localStorage.getItem('todos')) || [];
+  const todos = JSON.parse(localStorage.getItem('todos')) || [];
 
-    todos.forEach(todo => {
-      displayTask(todo);
-    });
-  } catch (error) {
-    alert("Error parsing todos from localStorage:", error);
-  }
+  if (todos.length === 0) return;
+
+  todos.forEach(todo => {
+    displayTask(todo);
+  });
 }
 
 async function displayTask(jsonresponse) {
-  try {
-    const tasksDiv = document.querySelector('.tasks-div');
-    globalJsonResponse = jsonresponse;
-
-  
-    const taskHTML = `
-      <div class="each-task task-${jsonresponse.id}">
-        <div class="p-div">
-          <p class="p-element p-${jsonresponse.id}">${jsonresponse.title}</p>
-          <p class="task-des des-${jsonresponse.id}">${jsonresponse.description}</p>
-        </div>
-        <div class="buttons-div">
-          <button class="edit-button" style="color: rgb(116, 218, 255);" onclick="editTask()">Edit</button>
-          <button class="delete-button" onclick="removeTask(${jsonresponse.id})">Delete</button>
-        </div>
-      </div>
-    `
-
-    tasksDiv.innerHTML += taskHTML;
-  } catch (error) {
-    console.error('Error with jsonresponse:', error);
+  if (!jsonresponse) {
+    console.log('Invalid jsonresponse:', jsonresponse);
+    return;
   }
+
+  const tasksDiv = document.querySelector('.tasks-div');
+  globalJsonResponse = jsonresponse;
+
+
+  const taskHTML = `
+    <div class="each-task task-${jsonresponse.id}">
+      <div class="p-div">
+        <p class="p-element p-${jsonresponse.id}">${jsonresponse.title}</p>
+        <p class="task-des des-${jsonresponse.id}">${jsonresponse.description}</p>
+      </div>
+      <div class="buttons-div">
+        <button class="edit-button" style="color: rgb(116, 218, 255);" onclick="editTask()">Edit</button>
+        <button class="delete-button" onclick="removeTask(${jsonresponse.id})">Delete</button>
+      </div>
+    </div>
+  `
+
+  tasksDiv.innerHTML += taskHTML;
 }
 
 
@@ -108,25 +105,25 @@ async function removeTask(jsonresponseId) {
     }
     document.querySelector(`.task-${jsonresponseId}`).remove();
 
-    savingRemovedTask(jsonresponseId);
+    saveRemovedTask(jsonresponseId);
   } catch(error) {
     alert('Could not delete the task:', error);
   }
 }
 
-async function savingRemovedTask(jsonresponseId) {
-  try {
-    const todos = JSON.parse(localStorage.getItem('todos')) || [];
-
-    todos = todos.filter(todo => {
-      if (todo.id !== jsonresponseId) {
-        return todo;
-      }
-    });
-    localStorage.setItem('todos', JSON.stringify(todos));
-  } catch(error) {
-    console.error('Error in the romoveTask():', error);
+async function saveRemovedTask(jsonresponseId) {
+  const todos = JSON.parse(localStorage.getItem('todos')) || [];
+  
+  if (todos.length === 0) {
+    return;
   }
+
+  todos = todos.filter(todo => {
+    if (todo.id !== jsonresponseId) {
+      return todo;
+    }
+  });
+  localStorage.setItem('todos', JSON.stringify(todos));
 }
 
 
@@ -175,14 +172,14 @@ function editTask() {
 
     const todos = JSON.parse(localStorage.getItem('todos')) || [];
     
-    newTodos = todos.map(todo => {
+    const newTodos = todos.map(todo => {
       if (todo.id === globalJsonResponse.id) {
         // This return returns the new updated object(with the new values of object properties)
         return {
           // ... todo creates a new object.
           ...todo,
-          title: title,
-          description: description,
+          title,
+          description,
         } 
       }
       // If the current todo is not the one we want to update, we return it as it is.

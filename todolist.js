@@ -111,7 +111,7 @@ async function removeTask(jsonresponseId) {
   }
 }
 
-async function saveRemovedTask(jsonresponseId) {
+function saveRemovedTask(jsonresponseId) {
   const todos = JSON.parse(localStorage.getItem('todos')) || [];
   
   if (todos.length === 0) {
@@ -136,7 +136,6 @@ function editTask(jsonresponseId) {
 
   const todos = JSON.parse(localStorage.getItem('todos')) || [];
   const todo = todos.find(todo => todo.id === jsonresponseId);
-  console.log(todo.id);
 
   if (!todo) {
     alert('Task not found');
@@ -154,7 +153,7 @@ function editTask(jsonresponseId) {
   document.querySelector('.input-element-description').value = description;
 }
   
-function toggleAddUpdateButton() {
+function replaceEditedTask() {
   const title = document.querySelector('.input-element').value;
   const description = document.querySelector('.input-element-description').value;
 
@@ -172,7 +171,8 @@ function toggleAddUpdateButton() {
 
   const todos = JSON.parse(localStorage.getItem('todos')) || [];
   
-  const newTodos = todos.map(todo => {
+  const newTodos = todos.map(todo => ({ ...todo, title, description }));
+    /*
     if (todo.id === globalJsonResponse.id) {
       // This return returns the new updated object(with the new values of object properties)
       return {
@@ -184,7 +184,7 @@ function toggleAddUpdateButton() {
     }
     // If the current todo is not the one we want to update, we return it as it is.
     return todo;
-  });
+    */
 
   localStorage.setItem('todos', JSON.stringify(newTodos));
 

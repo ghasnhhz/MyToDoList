@@ -96,33 +96,24 @@ async function removeTask(jsonresponseId) {
       headers: {
         'Content-type': 'application/json',
       }
-    });
-
+    }); 
 
     if (!task.ok) {
       alert("Couldn't remove your task, please try again later");
       return;
     }
-    document.querySelector(`.task-${jsonresponseId}`).remove();
 
-    saveRemovedTask(jsonresponseId);
+    const todos = JSON.parse(localStorage.getItem('todos')) || [];
+    if (todos.length === 0) {
+      return;
+    }
+    const newTodos = todos.filter(todo => todo.id !== jsonresponseId);
+    localStorage.setItem('todos', JSON.stringify(newTodos));
+    document.querySelector(`.task-${jsonresponseId}`).remove();
   } catch(error) {
     alert('Could not delete the task:', error);
   }
 }
-
-function saveRemovedTask(jsonresponseId) {
-  const todos = JSON.parse(localStorage.getItem('todos')) || [];
-  
-  if (todos.length === 0) {
-    return;
-  }
-
-  const newTodos = todos.filter(todo => todo.id !== jsonresponseId);
-
-  localStorage.setItem('todos', JSON.stringify(newTodos));
-}
-
 
 
 // We can not directly pass jsonresponse since this is an object in addTask().
@@ -171,7 +162,8 @@ function replaceEditedTask() {
 
   const todos = JSON.parse(localStorage.getItem('todos')) || [];
   
-  const newTodos = todos.map(todo => ({ ...todo, title, description }));
+  const newTodos = todos.map(todo => todo.id === globalJsonResponse.id
+    ? { ...todo, title, description} : todo);
     /*
     if (todo.id === globalJsonResponse.id) {
       // This return returns the new updated object(with the new values of object properties)
